@@ -1,0 +1,37 @@
+---
+- name: Install Tomcat 9 and deploy WAR
+  hosts: app
+  become: yes
+  vars:
+    app_name: "addressbook"
+    war_file: "/path/to/your/addressbook.war"  # <- Update this path to where your WAR file is
+  tasks:
+    - name: Ensure Java (for Tomcat)
+      apt:
+        name: openjdk-17-jre
+        state: present
+        update_cache: yes
+
+    - name: Install Tomcat 9
+      apt:
+        name: tomcat9
+        state: present
+
+    - name: Ensure Tomcat running
+      service:
+        name: tomcat9
+        state: started
+        enabled: yes
+
+    - name: Deploy WAR to Tomcat webapps
+      copy:
+        src: "{{ war_file }}"
+        dest: "/var/lib/tomcat9/webapps/{{ app_name }}.war"
+        owner: tomcat
+        group: tomcat
+        mode: '0644'
+
+    - name: Restart Tomcat to pick new WAR
+      service:
+        name: tomcat9
+        state: restarted
